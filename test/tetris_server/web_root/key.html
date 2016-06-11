@@ -1,0 +1,425 @@
+<HTML> 
+<HEAD><TITLE>Tetris Game</TITLE> 
+<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<style>
+		#board tr td{
+			width: 20px;
+			height: 20px;
+		}
+		body {
+			background-color: #cde; margin: 0;
+			padding: 0; font: 14px Helvetica, Arial, sans-serif;
+		}
+		* { outline: none; }
+		div.content {
+			width: 800px; margin: 2em auto; padding: 20px 50px;
+			background-color: #fff; border-radius: 1em;
+		}
+		label { display: inline-block; min-width: 7em; }
+		input { border: 1px solid #ccc; padding: 0.4em; margin: 0 0 10px 0; }
+		a:link, a:visited { color: #69c; text-decoration: none; }
+		@media (max-width: 700px) {
+			body { background-color: #fff; }
+			div.content {
+				width: auto; margin: 0 auto; border-radius: 0; padding: 1em;
+			}
+		}
+	</style>
+</HEAD> 
+<BODY>
+
+<div class="content">
+<h2>Score: <span id="score"> 0 </span></h2>
+<p>Next: <span id="next"> 0 </span></p>
+
+<table id="board" cellspacing=0 cellpadding=0 border=1 style="border-collapse:collapse;">
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+	<tr>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+		<td></td>
+	</tr>
+</table>
+<p>game_state: <span id="game_state"> 0 </span></p>
+<p>Token_id: <span id="token_id"> 0 </span></p>
+<p>player_name: <span id="player_name"> 0 </span></p>
+<p>status_code: <span id="status_code"> 0 </span></p>
+
+<p>s start game</p>
+<p>p pause game</p>
+<p>r resume game</p>
+<p>c cancel game</p>
+<p>u rotation tetromino</p>
+<p>l,r,d rotation tetromino</p>
+</div>
+</BODY> 
+<script type="text/javascript" language=JavaScript charset="UTF-8">
+ $(document).ready(function(){
+	  var token_id = '';
+	  var is_start = 1;
+	  var height = 20;
+	  var width  = 12;
+	  var tbl = document.getElementById("board");
+	  var timer;
+
+	 function idldraw() {
+		 operator_game(token_id, 'get_state');
+		 //timer = setInterval(idldraw,500);
+	 }
+      document.onkeydown=function(event){
+		var e = event || window.event || arguments.callee.caller.arguments[0];
+		if(e && e.keyCode==38){ // UP
+			operator_game(token_id, 'up');
+		  }
+		if(e && e.keyCode==40){ // DOWN
+			operator_game(token_id, 'down');
+		   }            
+		 if(e && e.keyCode==37){ // LEFT
+			 operator_game(token_id, 'left');
+		}
+		 if(e && e.keyCode ==39){ // RIGHT
+			 operator_game(token_id, 'right');
+		}
+		  if(e && e.keyCode == 67){ // RIGHT
+			  operator_game(token_id, 'stop');
+		  }
+		  if(e && e.keyCode==83){ // s
+			 if(is_start != 1) {
+				 return;
+			 }
+			 is_start = 0;
+			 var player_name = "guangleihe";
+			 var rand_key = "100";
+			 var process_url = 'game.php?player_name=' + player_name + '&randkey=' + rand_key + '&oper=start';
+			 $.get(process_url, function(data, status){
+				 // $("#view_list").html("");
+				 update_list_view(data);
+				 token_id = data.token_id;
+				 timer = setInterval(idldraw,500);
+			 });
+		}
+		 if(e && e.keyCode==80){ // p
+			 operator_game(token_id, 'pause');
+		}
+		 if(e && e.keyCode==82){ // r
+			 operator_game(token_id, 'resume');
+		}
+	}; 
+	function start_tetris_game(player_name, rand_key) {
+		 var process_url = 'game.php?player_name=' + player_name + '&randkey=' + rand_key + '&oper=start';
+		 $.get(process_url, function(data, status){
+			 // $("#view_list").html("");
+			 update_list_view(data);
+			 return data.token_id;
+		 });
+	}
+	 function operator_game(token_id, oper) {
+		 var process_url = 'game.php?token_id=' + token_id + '&oper=' + oper;
+		 $.get(process_url, function(data, status){
+			 // $("#view_list").html("");
+			 update_list_view(data);
+		 });
+	 }
+	 function update_list_view(data) {
+		 // $("#view").append(data.view_data);
+		 var map = data.view_data.split('');
+
+		 document.getElementById("game_state").innerText=" " + data.game_state;
+		 document.getElementById("status_code").innerText=" " + data.status_code;
+
+		 if(map.length != 240) {
+			 return;
+		 }
+
+		 document.getElementById("score").innerText=" " + data.score;
+		 document.getElementById("next").innerText=" " + data.next_tetrismino;
+		 document.getElementById("token_id").innerText=" " + data.token_id;
+		 document.getElementById("player_name").innerText=" " + data.player_name;
+
+		 for(var x = 0; x < height; x++) {
+			 for(var y = 0; y < width; y++) {
+				 if(map[x * width + y] == "#") {
+					 tbl.rows[x].cells[y].style.backgroundColor="red";
+				 } else {
+					 tbl.rows[x].cells[y].style.backgroundColor="white";
+				 }
+			 }
+		 }
+	 }
+});
+</script>
+</HTML> 

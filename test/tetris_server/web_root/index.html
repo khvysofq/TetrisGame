@@ -1,0 +1,757 @@
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=gb2312" />
+  <title>AI Tetris Game</title>
+  <style type="text/css">
+    <!--
+    /************ Table ************/
+    .xwtable {width: 100%;border-collapse: collapse;border: 1px solid #ccc;}
+    .xwtable thead td {font-size: 12px;color: #333333;text-align: center;background: #666666; repeat-x top center;border: 1px solid #ccc; font-weight:bold;}
+    .xwtable tbody tr {background: #fff;font-size: 12px;color: #666666;}
+    .xwtable tbody tr.alt-row {background: #f2f7fc;}
+    .xwtable td{line-height:20px;text-align: left;padding:4px 10px 3px 10px;height: 18px;border: 1px solid #ccc;}
+    -->
+
+    #board tr td{
+      width: 20px;
+      height: 20px;
+    }
+    #next_board tr td{
+      width: 20px;
+      height: 20px;
+    }
+    body {
+      background-color: #cde; margin: 0;
+      padding: 0; font: 14px Helvetica, Arial, sans-serif;
+    }
+    * { outline: none; }
+    div.content {
+      width: 800px; margin: 2em auto; padding: 20px 50px;
+      background-color: #fff; border-radius: 1em;
+    }
+    label { display: inline-block; min-width: 7em; }
+    input { border: 1px solid #ccc; padding: 0.4em; margin: 0 0 10px 0; }
+    a:link, a:visited { color: #69c; text-decoration: none; }
+    @media (max-width: 700px) {
+      body { background-color: #fff; }
+      div.content {
+        width: auto; margin: 0 auto; border-radius: 0; padding: 1em;
+      }
+    }
+  </style>
+  <script src="/js/jquery-3.0.0.min.js"></script>
+
+<script>
+
+  var token_id = '';
+  var height = 20;
+  var width  = 12;
+  var tbl;
+  var next_tbl;
+  var timer;
+  var activeBlock;
+
+  $(document).ready(function(){
+    UpdateList();
+    setInterval(UpdateList, 5000);
+
+    token_id = '';
+    is_start = 1;
+    height = 20;
+    width  = 12;
+    tbl = document.getElementById("board");
+    next_tbl = document.getElementById("next_board");
+    activeBlock = new Array(4);
+
+    document.onkeydown=function(event){
+      var e = event || window.event || arguments.callee.caller.arguments[0];
+      if(e && e.keyCode==38){ // UP
+        e.preventDefault();
+        operator_game(token_id, 'up');
+      }
+      if(e && e.keyCode==40){ // DOWN
+        e.preventDefault();
+        operator_game(token_id, 'down');
+      }
+      if(e && e.keyCode==37){ // LEFT
+        e.preventDefault();
+        operator_game(token_id, 'left');
+      }
+      if(e && e.keyCode ==39){ // RIGHT
+        e.preventDefault();
+        operator_game(token_id, 'right');
+      }
+      if(e && e.keyCode == 67){ // RIGHT
+        operator_game(token_id, 'stop');
+      }
+      if(e && e.keyCode==83){ // s
+        start_tetris_game();
+      }
+      if(e && e.keyCode==80){ // p
+        operator_game(token_id, 'pause');
+      }
+      if(e && e.keyCode==82){ // r
+        operator_game(token_id, 'resume');
+      }
+    };
+  });
+
+  function idldraw() {
+    operator_game(token_id, 'get_state');
+    //timer = setInterval(idldraw,500);
+  }
+
+  function start_tetris_game() {
+    var player_name = $("#game_name").val();
+    var rand_key = "100";
+    var process_url = 'game.php?player_name=' + player_name + '&randkey=' + rand_key + '&oper=start';
+    $.get(process_url, function(data, status){
+      // $("#view_list").html("");
+      update_list_view(data);
+      token_id = data.token_id;
+      timer = setInterval(idldraw,500);
+    });
+  }
+  function operator_game(token_id, oper) {
+    var process_url = 'game.php?token_id=' + token_id + '&oper=' + oper;
+    $.get(process_url, function(data, status){
+      // $("#view_list").html("");
+      update_list_view(data);
+    });
+  }
+  function update_list_view(data) {
+    // $("#view").append(data.view_data);
+    var map = data.view_data.split('');
+
+    document.getElementById("game_state").innerText=" " + data.game_state;
+    document.getElementById("status_code").innerText=" " + data.status_code;
+
+    if(map.length != 240) {
+      return;
+    }
+
+    document.getElementById("score").innerText=" " + data.score;
+    document.getElementById("next").innerText=" " + data.next_tetrismino;
+    document.getElementById("token_id").innerText=" " + data.token_id;
+    document.getElementById("player_name").innerText=" " + data.player_name;
+
+    for(var x = 0; x < height; x++) {
+      for(var y = 0; y < width; y++) {
+        if(map[x * width + y] == "#") {
+          tbl.rows[x].cells[y].style.backgroundColor="red";
+        } else {
+          tbl.rows[x].cells[y].style.backgroundColor="white";
+        }
+      }
+    }
+
+    NextBlock(data.next_tetrismino);
+
+    for(var x = 0; x < 4; x++) {
+      for(var y = 0; y < 4; y++) {
+        next_tbl.rows[x].cells[y].style.backgroundColor="white";
+      }
+    }
+    for(var i = 0; i < 4; i++) {
+      next_tbl.rows[activeBlock[i].x].cells[activeBlock[i].y].style.backgroundColor="red";
+    }
+  }
+  function UpdateRankList() {
+    $.get('rank_list.php', function(data, status){
+      var view_html = '';
+      for(var i = 0; i < data.length; i++) {
+        view_html += ItemRankHtml(i +1, data[i].player_name, data[i].token_id, data[i].start_time ,data[i].end_time,data[i].score);
+      }
+      $("#rank_list").html(view_html);
+    });
+  }
+  function ItemRankHtml(rank, player_name, token_id, start_time, end_time, score) {
+    var insert_item = '<tr><td>' + rank +'</td>'
+            + '<td>' + player_name +'</td>'
+            + '<td>' + token_id +'</td>'
+            + '<td>' + start_time +'</td>'
+            + '<td>' + end_time +'</td>'
+            + '<td>' + score +'</td></tr>';
+    return insert_item;
+  }
+
+  function UpdateOnlineList() {
+    $.get('online_list.php', function(data, status){
+      var view_html = '';
+      for(var i = 0; i < data.length; i++) {
+        view_html += ItemOnlineHtml(data[i].player_name, data[i].token_id, data[i].start_time ,data[i].game_state,data[i].score);
+      }
+      $("#online_list").html(view_html);
+    });
+  }
+  function ItemOnlineHtml(player_name, token_id, start_time, game_state, score) {
+    var insert_item = '<tr><td>' + player_name +'</td>'
+            + '<td>' + token_id +'</td>'
+            + '<td>' + start_time +'</td>'
+            + '<td>' + game_state +'</td>'
+            + '<td>' + score +'</td></tr>';
+    return insert_item;
+  }
+  function UpdateList() {
+    UpdateRankList();
+    UpdateOnlineList();
+  }
+  function NextBlock(index) {
+
+    switch (index) {
+      case 0:
+      {
+        activeBlock[0] = {x: 0, y: 2};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 1, y: 2};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 1:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 2:
+      {
+        activeBlock[0] = {x: 0, y: 0};
+        activeBlock[1] = {x: 1, y: 0};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 3:
+      {
+        activeBlock[0] = {x: 2, y: 0};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 1, y: 2};
+        break;
+      }
+      case 4:
+      {
+        activeBlock[0] = {x: 0, y: 2};
+        activeBlock[1] = {x: 1, y: 2};
+        activeBlock[2] = {x: 2, y: 2};
+        activeBlock[3] = {x: 3, y: 2};
+        break;
+      }
+      case 5:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 1, y: 2};
+        activeBlock[3] = {x: 1, y: 3};
+        break;
+      }
+      case 6:
+      {
+        activeBlock[0] = {x: 0, y: 1};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 1, y: 2};
+        break;
+      }
+      case 7:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 1, y: 2};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 8:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 0, y: 1};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 9:
+      {
+        activeBlock[0] = {x: 1, y: 1};
+        activeBlock[1] = {x: 2, y: 0};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 10:
+      {
+        activeBlock[0] = {x: 0, y: 1};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 11:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 2, y: 0};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 1, y: 2};
+        break;
+      }
+      case 12:
+      {
+        activeBlock[0] = {x: 0, y: 0};
+        activeBlock[1] = {x: 0, y: 1};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 13:
+      {
+        activeBlock[0] = {x: 2, y: 0};
+        activeBlock[1] = {x: 2, y: 1};
+        activeBlock[2] = {x: 1, y: 2};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 14:
+      {
+        activeBlock[0] = {x: 0, y: 1};
+        activeBlock[1] = {x: 0, y: 2};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 2, y: 1};
+        break;
+      }
+      case 15:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 1, y: 2};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 16:
+      {
+        activeBlock[0] = {x: 0, y: 1};
+        activeBlock[1] = {x: 1, y: 1};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 2, y: 0};
+        break;
+      }
+      case 17:
+      {
+        activeBlock[0] = {x: 1, y: 0};
+        activeBlock[1] = {x: 2, y: 0};
+        activeBlock[2] = {x: 2, y: 1};
+        activeBlock[3] = {x: 2, y: 2};
+        break;
+      }
+      case 18:
+      {
+        activeBlock[0] = {x: 0, y: 0};
+        activeBlock[1] = {x: 1, y: 0};
+        activeBlock[2] = {x: 1, y: 1};
+        activeBlock[3] = {x: 0, y: 1};
+        break;
+      }
+    }
+  }
+</script>
+
+</head>
+<body>
+<div class="content">
+  <table width="800" border="0" >
+    <tr>
+      <td colspan="2">
+        <table width="800" border="1">
+          <tr>
+            <td>
+              <p>玩家名称 :<Input type="text" value="guangleihe" id="game_name"/></p>
+            </td>
+            <td>
+              <button onclick="start_tetris_game()">开始新的游戏</button>
+            </td>
+            <td>
+              <p>Next: <span id="next"> 0 </span></p>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2">
+              <h2>Score: <span id="score"> 0 </span></h2>
+            </td>
+            <td rowspan="3">
+              <table id="next_board" cellspacing=0 cellpadding=0 border=1 style="border-collapse:collapse;">
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>game_state: <span id="game_state"> 0 </span></p>
+            </td>
+            <td>
+              <p>Token_id: <span id="token_id"> 0 </span></p>
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <p>player_name: <span id="player_name"> 0 </span></p>
+            </td>
+            <td>
+              <p>status_code: <span id="status_code"> 0 </span></p>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+
+    <tr>
+      <td>
+        <table id="board" cellspacing=0 cellpadding=0 border=1 style="border-collapse:collapse;">
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </table>
+      </td>
+      <td>
+        <img src="/img/press_key.png" />
+      </td>
+    </tr>
+  </table>
+</div>
+
+<div class="content">
+  <h2>排行榜</h2>
+  <table class="xwtable">
+    <thead>
+    <tr>
+      <td>排名</td>
+      <td>玩家名称</td>
+      <td>TokenID</td>
+      <td>游戏开始时间</td>
+      <td>游戏结束时间</td>
+      <td>分数</td>
+    </tr>
+    </thead>
+    <tbody id="rank_list">
+    </tbody>
+  </table>
+
+  <h2>当前正在进行的游戏</h2>
+  <table class="xwtable">
+    <thead>
+    <tr>
+      <td>玩家名称</td>
+      <td>TokenID</td>
+      <td>游戏开始时间</td>
+      <td>当前游戏状态</td>
+      <td>分数</td>
+    </tr>
+    </thead>
+    <tbody id="online_list">
+    </tbody>
+  </table>
+</div>
+
+</body>
+
+</html>
