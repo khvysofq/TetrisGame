@@ -93,6 +93,7 @@ MESSAGE(STATUS "Step 3 :  Add More defines")
 	 )
  else()
 	 ADD_DEFINITIONS(
+		-std=c++11
 	 )
  endif()
 
