@@ -2,6 +2,7 @@
 #define TETRIS_TETROMINO_H_
 
 #include <memory>
+#include <string.h>
 
 namespace tetris {
 

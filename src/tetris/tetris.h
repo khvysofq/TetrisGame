@@ -3,8 +3,8 @@
 
 #include "tetris/tetromino.h"
 #include <memory>
-#include<thread>
-#include<mutex>
+#include <thread>
+#include <mutex>
 
 const unsigned int TETRIS_MAP_HEIGHT      = 24;
 const unsigned int TETRIS_MAP_WIDTH       = 14;
