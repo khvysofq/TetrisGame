@@ -66,6 +66,8 @@ IF(WIN32)
 		libcurl_imp.lib
 		jsoncpp.lib
 		winmm.lib
+		ws2_32.lib
+		crypt32.lib
 		${GLOG_LIB_NAME}
 		)
 ELSE()

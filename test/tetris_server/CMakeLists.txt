@@ -24,13 +24,31 @@ endforeach()
 
 #########################################################################
 #Step 3 : Add code source
+IF(WIN32)
 SET(SRC_LIST 
 	${CMAKE_CURRENT_SOURCE_DIR}/tetris_server.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.c
 	)
 
 SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/tetris_server.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vzflags.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.h
+	${CMAKE_CURRENT_SOURCE_DIR}/getopt.c
 	)
+ELSE()
+SET(SRC_LIST 
+	${CMAKE_CURRENT_SOURCE_DIR}/tetris_server.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vzflags.h
+	)
+
+SOURCE_GROUP(${BUILD_PROJECT_NAME} FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/tetris_server.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/vzflags.h
+	)
+ENDIF()
 #########################################################################
 #Step 4 : Add PROJECT define 
 MESSAGE(STATUS "Step 4 : Add code source")
