@@ -5,6 +5,10 @@
 #include <iostream>
 #include "vzflags.h"
 
+#ifndef WIN32
+#include <getopt.h>
+#endif
+
 
 void PrintUsage() {
   printf("\n");
@@ -27,31 +31,37 @@ int main(int argc, char *argv[]) {
 
   tetris::TetrisServerSettings tss;
 
-  tss.bind_addr = "0.0.0.0";
-  tss.http_port = "8000";
-  tss.html_root = "F:/code/osc/TetrisGame/test/tetris_server/web_root";
-  tss.database_path = "F:/code/osc/TetrisGame/test/tetris_server/rank_database.db";
-
-  int opt = 0;
-  while((opt = getopt(argc, argv, "a:p:r:d:h")) != -1) {
-    switch (opt) {
-    case 'a':
-      tss.bind_addr = optarg;
-      break;
-    case 'p':
-      tss.http_port = atoi(optarg);
-      break;
-    case 'r':
-      tss.html_root = optarg;
-      break;
-    case 'd':
-      tss.database_path = optarg;
-      break;
-    case 'h':
-      PrintUsage();
-      exit(EXIT_SUCCESS);
-    }
+  if(argc != 4) {
+    std::cout << argc << std::endl;
+    std::cout << "./tetris_server 8000 F:/ad/web_root F:/database.db" << std::endl;
+    return EXIT_FAILURE;
   }
+
+  tss.bind_addr = "0.0.0.0";
+  tss.http_port = argv[1];
+  tss.html_root = argv[2];
+  tss.database_path = argv[3];
+
+  //int opt = 0;
+  //while((opt = getopt(argc, argv, "a:p:r:d:h")) != -1) {
+  //  switch (opt) {
+  //  case 'a':
+  //    tss.bind_addr = optarg;
+  //    break;
+  //  case 'p':
+  //    tss.http_port = atoi(optarg);
+  //    break;
+  //  case 'r':
+  //    tss.html_root = optarg;
+  //    break;
+  //  case 'd':
+  //    tss.database_path = optarg;
+  //    break;
+  //  case 'h':
+  //    PrintUsage();
+  //    exit(EXIT_SUCCESS);
+  //  }
+  //}
   
   std::cout << tss.bind_addr << std::endl;
   std::cout << tss.http_port << std::endl;

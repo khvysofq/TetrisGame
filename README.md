@@ -71,6 +71,11 @@ cmake .. -DBUILD_CURL_TESTS=OFF
 由于使用了三个开源库，而这些库又有自己的头文件，因此在包含头文件的时候要指定如下几个路径在自己工程中才能够正确的使用
 - `git_path/TetrisGame/src`，用户需要包含主要的头文件使用时`#include "ali_search/ali_search.h"`
 - `git_path/TetrisGame/third_part/jsoncpp/include`,这是Json的库，用户能够直接使用到。
+- 在编译libcurl.dll的时候，如果出现`unresolved external symbol __imp__CertFreeCertificateContext`错误，那么需要在libcurl的vs2013工程中添加对`crypt32.lib`库的链接。
+
+```
+schannel.obj : error LNK2019: unresolved external symbol __imp__CertFreeCertificateContext@4 referenced in function _schannel_connect_step3
+```
 
 > 如果用户希望使用Glog日志库，那么可以包含`#include "base/logging.h"`头文件，但是需要指定Glog的路径`git_path/TetrisGame/build/third_part/glog`和`git_path/TetrisGame/third_partglog/src`两个路径。为了更好的使用Glog，用户可以在自己程序的main函数开始的时候初始化最好初始化Glog
 > 

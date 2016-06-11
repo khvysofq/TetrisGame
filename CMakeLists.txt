@@ -80,6 +80,7 @@ ELSE()
 		${LIBCURL_LIB_NAME}
 		${GLOG_LIB_NAME}
 		pthread
+		-ldl
 		)
 ENDIF()
 
@@ -164,5 +165,5 @@ ENDIF()
 ADD_SUBDIRECTORY(src)
 
 # TEST
-ADD_SUBDIRECTORY(test/web_server)
+# ADD_SUBDIRECTORY(test/web_server)
 ADD_SUBDIRECTORY(test/tetris_server)
