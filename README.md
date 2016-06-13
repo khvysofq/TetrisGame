@@ -24,7 +24,7 @@
 	// 下载源代码工程
 	git clone https://git.oschina.net/guangleihe/TetrisGame.git
 	// 进入下载工程目录	
-	cd aliyun_opensearch
+	cd TetrisGame
 	// 更新第三方依赖库
 	git submodule update --init --recursive
 	// 创建一个编译文件夹，在这个文件夹中进行编译，保证源代码清洁
