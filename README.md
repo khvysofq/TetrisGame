@@ -74,7 +74,9 @@ cmake .. -DBUILD_CURL_TESTS=OFF
 - 在编译libcurl.dll的时候，如果出现`unresolved external symbol __imp__CertFreeCertificateContext`错误，那么需要在libcurl的vs2013工程中添加对`crypt32.lib`库的链接。
 
 ```
-schannel.obj : error LNK2019: unresolved external symbol __imp__CertFreeCertificateContext@4 referenced in function _schannel_connect_step3
+schannel.obj : error LNK2019: 
+	unresolved external symbol __imp__CertFreeCertificateContext@4 
+		referenced in function _schannel_connect_step3
 ```
 
 > 如果用户希望使用Glog日志库，那么可以包含`#include "base/logging.h"`头文件，但是需要指定Glog的路径`git_path/TetrisGame/build/third_part/glog`和`git_path/TetrisGame/third_partglog/src`两个路径。为了更好的使用Glog，用户可以在自己程序的main函数开始的时候初始化最好初始化Glog
@@ -115,3 +117,67 @@ Linux平台我们已经指定了编译顺序，只需要使用`make`命令执行
 	  FLAGS_colorlogtostderr = true;
 	}
 ```
+
+## TetrisGame Http 协议文档
+
+`TetrisGame`提供基于http简单的`RESTful API`接口，保证用户不论使用什么样的语言都能够轻松的接入服务端。简单来说，我们提供了一共九个接口。这九个接口都使用简单的http get + url的请求形式发送给服务端，而服务端回复JSON数据。
+
+接下来我们先讲服务端的JSON回复，然后再讲请求，因为九个接口的服务端返回字段都是一样的，因此将返回写到最前面。
+
+## 服务端回复
+
+服务端的JSON回复一共会存在七个平行的字段，分别是如下的字段。
+
+| 字段名称 | 字段解释  | 类型  | 备注 |
+|---|---|---|---|
+| `game_state`  | 游戏当前的状态  |  字符串 |  `running`、`pause`、`game_over`  |
+| `view_data` | 游戏当前的界面值，游戏为一个`12 * 20`的长方形界面  | 字符串  | 一共`240`个字符，其中空格(ASCII 32)代表无砖块`#`(ASCII 35)代表有砖块   |
+| `next_tetrismino`  | 下一块方块的编号 | 整数  | `[0 , 18]`，一共有19种可能   |
+| `score`  | 当前游戏的得分  | 整数 |  -  |
+| `token_id`  | 当前游戏的唯一ID号  | 字符串  | 每一个游戏在服务端都有一个唯一的编号，用户的操作需要这个值   |
+| `play_name`  | 当前游戏玩家的名称  | 字符串  |  用户在游戏开始的时候可以指定一个玩家名称，后面可以查看排名  |
+| `status_code`  | 当前操作的返回状态  | 数字  |  一些操作出现了错误，会在这个地方进行显示  |
+
+上面是一个简表，其它一些具体的解释后面也会给出来
+
+## 九种基本操作
+
+九中基本操作按传入的参数不同分为两类，开始游戏与其它，因为开始游戏的时候参数会有三个，剩下的八种操作都只有两个参数，而且参数名称都是一样的。
+
+## 开始游戏
+
+开始游戏需要传入三个参数
+
+| 参数名称  | 值  | 类型  | 备注  |
+|---|---|---|---|
+| `oper`  | `start`  | 字符串  | -  |
+| `player_name`  | 用户自定义的名称  |  字符串 | 未来会在排行榜上看到这个名称  |
+| `rand_key`  | 随机种子  |  整数 |  游戏开始的随机数，可以复现一个游戏 |
+
+上面特别注意的是里面的`rand_key`，如果`rand_key`不为`0`的话，那么就会以这个值为随机种子，这样用户接下来随机出来的砖块实际上都是有规律的，用户使用同样的`rand_key`会得到相同的结果，这样方便用户进行训练和专门优化。如果`rand_key`的值为0的话，那么就会按照当前的时间戳做为随机种子，这样用户就不能够预测游戏的值了。
+
+未来过程中使用`rand_key`为0的用户和非`0`的用户将会分别排名。
+
+在用户开始游戏之后，服务器会返回一个`token_id`，`token_id`用来在服务器上标识一个具体的游戏，在服务器上是唯一的，未来用户将会使用空上`token_id`来操作游戏。
+
+## 其它操作
+
+剩下的操作只会有两个参数
+
+| 参数名称  | 值  | 类型  | 备注  |
+|---|---|---|---|
+| `oper`  | `start`  | 字符串  | 一共八种，后面有介绍  |
+| `token_id`  | 标识游戏的唯一ID  |  字符串 | 由开始游戏之后服务器返回  |
+
+下表是不同的`oper`代表的含义
+
+| 操作名称  | 备注  |
+|---|---|
+| `stop`  | 直接终止游戏，只有当用户开始游戏之后，才能够中止游戏  |
+| `pause`  | 暂停游戏，当前情况下用户要以暂时游戏一段时间，不过一个游戏最多暂停24小时，之后会自动停止游戏进行game_over状态  |
+| `resume`  | 唤醒游戏，暂停游戏之后，可以调用这个参数来唤醒游戏  |
+| `up`  | 方块变换，遵守传统的俄罗斯广场的操作规则，使用`up`来进行变换  |
+| `down`  | 向下移动一格  |
+| `left`  | 向左移动一格  |
+| `right`  | 向右移动一格  |
+| `get_state`  | 不做任何操作，只得到当前游戏的状态，一般用户可以在本地进行每一秒一次的刷新，以得到当前的游戏界面状态，因为一个游戏开始之后，会在服务端进行执行，每隔一秒就会向下移动一格，因此用户有必要进行定时刷新，以得到最新的游戏状态，以便做相应的判断。  |
